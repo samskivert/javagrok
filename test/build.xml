@@ -165,4 +165,9 @@
       <link href="http://java.sun.com/javase/6/docs/api/"/>
     </javadoc>
   </target>
+  
+  <target name="nit" depends="compile"
+          description="Runs the nullability inference tool (nit) on the compiled classes.">
+    <echo>nit stub</echo>
+  </target>
 </project>
