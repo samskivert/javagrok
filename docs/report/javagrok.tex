@@ -13,6 +13,11 @@
 \renewenvironment{enumerate}{\Enumerate\Nospacing}{\endlist}
 \renewenvironment{description}{\Description\Nospacing}{\endlist}
 
+% Disable the copyright and boilerplate for now
+\makeatletter
+\let\@copyrightspace\relax
+\makeatother
+
 \begin{document}
 \conferenceinfo{UWCSE503}{'10 Seattle, WA USA}
 
