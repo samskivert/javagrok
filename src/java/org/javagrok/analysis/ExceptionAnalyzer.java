@@ -14,46 +14,63 @@ import com.sun.source.tree.*;
 
 import java.util.List;
 import java.util.ArrayList;
+import java.util.Stack;
 
 /**
  * Exception analysis
  */
 public class ExceptionAnalyzer extends AbstractAnalyzer
 {
+    private static enum BoolSign {
+	POS, NEG
+    }
     private class ExceptionScanner extends TreeScanner {
 	private final AnalysisContext ctx;
 	private List<String> exns;
-	private JCClassDecl current_class;
+	private Stack<Pair<BoolSign,JCExpression>> current_path;
+	private Stack<JCClassDecl> current_class;
+	private Stack<JCMethodDecl> current_method;
+	private class Pair<X,Y> {
+	    public X a;
+	    public Y b;
+	    public Pair(X a, Y b) {
+		this.a = a;
+		this.b = b;
+	    }
+	}
 	public ExceptionScanner(final AnalysisContext ctx) {
 	    this.ctx = ctx;
+	    current_class = new Stack<JCClassDecl>();
+	    current_method = new Stack<JCMethodDecl>();
+	    exns = new ArrayList<String>();
+	    current_path = new Stack<Pair<BoolSign,JCExpression>>();
 	}
 	public void visitClassDef (JCClassDecl tree) {
 	    //ctx.info("Visiting class "+ (tree.name.length()==0 ? "<anon class>" : tree.name));
 	    if (tree.name.length() > 0) {
 		ctx.addAnnotation(tree, Property.class,
 				  "property", tree.name + " analyzed by exception analysis!");
-		current_class = tree;
 	    }
+	    current_class.push(tree);
 	    super.visitClassDef(tree);
-	    if (tree.name.length() > 0) {
-		current_class = null;
-	    }
+	    current_class.pop();
 	}
 	public void visitMethodDef (JCMethodDecl tree) {
 	    if (tree == null) {
-		ctx.info("NULL MethodDecl!!!");
+		throw new IllegalArgumentException("Method declaration shouldn't be null!");
 	    }
 	    //ctx.info("Visiting method "+tree.name+" in "+tree.sym);
 	    if (tree.sym != null) {
-		exns = new ArrayList<String>();
+		exns.clear();
 	    }
+	    current_method.push(tree);
 	    super.visitMethodDef(tree);
 	    if (tree.sym != null && !exns.isEmpty()) {
 		String exnlist = "";
 		for (String s : exns) {
 		    exnlist += " " + s;
 		}
-		ctx.info("Method "+current_class.name+"."+tree.name+" throws"+exnlist);
+		ctx.info("Method "+current_class.peek().name+"."+tree.name+" throws"+exnlist);
 		ctx.addAnnotation(tree, Property.class,
 				  "property", "explicitly throws"+exnlist);
 		//for (JCVariableDecl param : tree.params) {
@@ -61,6 +78,7 @@ public class ExceptionAnalyzer extends AbstractAnalyzer
 		//		      "property", param.name + " analyzed by exception analysis!");
 		//}
 	    }
+	    current_method.pop();
 	    ///* XXX WIP */
 	    //List<JCExpression> thrown = tree.getThrows();
 	    //for (JCExpression e : thrown) {
@@ -68,16 +86,33 @@ public class ExceptionAnalyzer extends AbstractAnalyzer
 	    //    ctx.info("Method "+tree.name+" throws "+id.getName().toString());
 	    //}
 	}
+	public void visitIf(JCIf tree) {
+	    scan(tree.cond);
+	    current_path.push(new Pair<BoolSign,JCExpression>(BoolSign.POS,tree.cond));
+	    scan(tree.thenpart);
+	    current_path.peek().a = BoolSign.NEG;
+	    scan(tree.elsepart);
+	    current_path.pop();
+	}
 	private String extractExceptionType(JCExpression e) {
 	    if (e.getKind() == Tree.Kind.NEW_CLASS)
 		return ((JCNewClass)e).getIdentifier().toString();
 	    else
 		return "Unknown: "+e.getKind()+"("+e+")";
 	}
+	private String getCurrentBranchPath() {
+	    // TODO: Need to actually expand the whole stack, not just top element
+	    if (current_path.empty()) {
+		return " always";
+	    }
+	    else {
+	        return " when "+(current_path.peek().a == BoolSign.NEG ? "!(" : "(")+current_path.peek().b+")";
+	    }
+	}
 	public void visitThrow(JCThrow tree) {
 	    super.visitThrow(tree);
 	    String exn = extractExceptionType(tree.getExpression());
-	    ctx.info("Found throw of type " + exn);
+	    ctx.info(current_class.peek().name+"."+current_method.peek().name+" throws "+exn+getCurrentBranchPath());
 	    if (!exns.contains(exn))
 		exns.add(exn);
 	}
