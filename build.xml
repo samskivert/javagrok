@@ -90,6 +90,7 @@
                provider="org.javagrok.processor.Processor"/>
       <service type="org.javagrok.analysis.Analyzer">
         <provider classname="org.javagrok.analysis.ExceptionAnalyzer"/>
+      	<provider classname="org.javagrok.analysis.Uno"/>
       </service>
     </jar>
   </target>

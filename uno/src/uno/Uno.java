@@ -208,12 +208,12 @@ public class Uno {
 		Timer.start(0);
 		Msg.toFile(packageName+"/out");
 
-		Msg.println("Results ("+new Date()+") :\n");
+		//Msg.println("Results ("+new Date()+") :\n");
 		
 		for(Iterator i=classList.iterator();i.hasNext();){
 			SootClass c = Scene.v().getSootClass((String) i.next());
 			System.out.println("2: ("+(++count)+"/"+size+") " + c);
-			Msg.println(c.toString() + "\n");
+			//Msg.println(c.toString() + "\n");
 
 			Query q = null;
 
@@ -223,7 +223,11 @@ public class Uno {
 				{
 					q=QueryFactory.getUniqQuery(m,-1);
 					q.getTruth(0);
-					if(!printTrace){Msg.println("*"+q);}
+					if(!printTrace){
+						String text = q.toString();
+						String annot = text.substring(0, text.indexOf(' '))+ " ";
+						Msg.println("m " + annot + c.toString() + " " + m.getName() + " //" + q);
+					}
 				}
 				if(!m.isStatic() && !CallGraph.isConstructor(m)){
 					q=QueryFactory.getUniqBaseQuery(m);
