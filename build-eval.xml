@@ -151,7 +151,6 @@
       </bootclasspath>
       <classpath>
         <fileset dir="${afu.dir}" includes="annotation-file-utilities.jar"/>
-        <!--<fileset dir="../${deploy.dir}" includes="javagrok.jar"/>-->
         <pathelement location="${classes.dir}"/>
       </classpath>
       <assertions><enable/></assertions>
@@ -169,6 +168,7 @@
       </packageset>
       <classpath>
         <fileset dir="../${deploy.dir}" includes="javagrok.jar"/>
+        <fileset dir="../lib" includes="jsr305.jar"/>
         <pathelement location="${classes.dir}"/>
       </classpath>
       <doclet name="org.javagrok.doclet.Standard" path="../${deploy.dir}/javagrok.jar"/>
