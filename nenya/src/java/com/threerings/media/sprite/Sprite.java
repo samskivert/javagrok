@@ -138,6 +138,18 @@ public abstract class Sprite extends AbstractMedia
         return _orient;
     }
 
+    /**
+     * Configures the offset from the upper left of this sprite's bounding box to its "hot spot".
+     * The hot spot is aligned with the sprite's location (see {@link #setLocation}), thus setting
+     * the origin offset of a 50x50 sprite to 25x25 will cause the sprite to be positioned by its
+     * center rather than its upper left.
+     */
+    public void setOriginOffset (int xoff, int yoff)
+    {
+        _oxoff = xoff;
+        _oyoff = yoff;
+    }
+
     @Override
     public void setLocation (int x, int y)
     {
