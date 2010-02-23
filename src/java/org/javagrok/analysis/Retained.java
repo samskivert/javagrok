@@ -17,6 +17,4 @@ import java.lang.annotation.Target;
 @Documented
 public @interface Retained
 {
-	/** The text of the property. */
-    public String property ();
 }

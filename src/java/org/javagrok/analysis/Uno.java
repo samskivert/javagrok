@@ -159,12 +159,12 @@ public class Uno extends AbstractAnalyzer {
 			if (!(returnType instanceof JCTree.JCPrimitiveTypeTree)) {
 				if (trueMethodProperties.containsKey(key) && trueMethodProperties.get(key).contains(UnoProperty.UNIQRET)) {
 					ctx.info("UNO: Adding annotation for method: " + key);
-					ctx.addAnnotation(tree, UniqueReturn.class, "property", "Returns an unique object"); // TODO Better text here... :-)
+					ctx.addAnnotation(tree, UniqueReturn.class);
 					annotatedMethods++;
 				}
 				else if (falseMethodProperties.containsKey(key) && falseMethodProperties.get(key).contains(UnoProperty.UNIQRET)) {
 					ctx.info("UNO: Adding annotation for method: " + key);
-					ctx.addAnnotation(tree, NonUniqueReturn.class, "property", "Method does not return an unique object"); // TODO Better text here... :-)
+					ctx.addAnnotation(tree, NonUniqueReturn.class);
 					annotatedMethods++;
 				}
 				else {
@@ -188,11 +188,11 @@ public class Uno extends AbstractAnalyzer {
                 
             	if (trueParameterProperties.containsKey(key) && trueParameterProperties.get(key).contains(UnoProperty.LENTPAR)) {
             		ctx.info("UNO: Adding annotation for parameter: " + key);
-            		ctx.addAnnotation(param, NotRetained.class, "property", "Parameter is lent");
+            		ctx.addAnnotation(param, NotRetained.class);
             	}
             	else if (falseParameterProperties.containsKey(key) && falseParameterProperties.get(key).contains(UnoProperty.LENTPAR)) {
             		ctx.info("UNO: Adding annotation for parameter: " + key);
-            		ctx.addAnnotation(param, Retained.class, "property", "Parameter gets captured");
+            		ctx.addAnnotation(param, Retained.class);
             	}
             	else {
             		//ctx.info("No property for key: " + key);

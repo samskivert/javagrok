@@ -17,6 +17,4 @@ import java.lang.annotation.Target;
 @Documented
 public @interface UniqueReturn
 {
-	/** The text of the property. */
-    public String property ();
 }
