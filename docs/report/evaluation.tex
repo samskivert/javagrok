@@ -1,113 +1,85 @@
 \section{Evaluation}
 \label{sec:Evaluation}
 
-We propose to evaluate our work in two ways: by comparing our inferred
-documentation against existing documentation for a library that is widely
-considered to be of high quality (\textit{exemplar} documentation), and by
-conducting a small user study.
+We plan to perform a small experiment wherein we wil measure events where a
+developer encounters a question of how to correctly use a third party library.
+We consider three cases: a) the question was answered by the library
+documentation, b) the question was not answered by the library documentation,
+but was answered by direct referal to the library source code, and c) the
+question was answered neither by the documentation nor the source code.
 
-\subsection{Comparison with exemplar documentation}
+Our hypothesis, construed in terms of this experiment, is that by augmenting
+library documentation with the results of the previously described analyses, we
+will increase the incidence of questions being answered by the library
+documentation and reduce the incidence of questions requiring perusal of the
+source code. We do not hypothesize that our augmented documentation will have
+any impact on the incidence of questions that are answered by neither the
+documentation nor source.
 
-We will generate documentation by running our our tool on a subset of the
-classes in the \texttt{java.util} package of the Java standard libraries. This
-documentation will be compared with the documentation provided with the
-Java SE Development Kit version 1.6~\cite{JDK6}.
+\subsection{Experiment Design}
+The experiment will involve two groups of developers, each given a library with
+which they are unfamiliar and a set of programming tasks to be implemented
+using the functionality provided by the library. One group will be provided
+with augmented documentation and the other will be provided with unaugmented
+documentation.
 
-For each class and method in the target code, our tool generates properties for
-insertion into the documentation. Example properties include: ``Argument foo
-may not be null'', or ``This method has no side effects.'' We will compare
-these properties to properties identified in the exemplar documentation and
-classify them via the following criteria\footnote{These are similar to the
-criteria used by Buse and Weimer~\cite{autodoc}.}:
+The members of each group will be provided with equivalent development
+environments (the Eclipse IDE, configured to provide ready access to the
+augmented or unaugmented documentation as well as the library source code).
+Additionally the subjects will be shown how to access both the library
+documentation and source code to reduce the likelihood that differing
+familiarity with the development environment influences the subject's decision
+to inspect the documentation or source code.
 
-\begin{itemize}
-\item How many properties were inferred by our tool that were not specified by
-  the exemplar documentation.
-\item How many properties were specified by the exemplar documentation that
-  were not inferred by our tool.
-\item In cases where our tool documents a property that is also specified by
-  the exemplar documentation, is our documentation \textit{better},
-  \textit{worse} or about the \textit{same}. We will consider our documentation
-  better if it is more precise, or documents additional conditions for the
-  property. We will consider it the same if it conveys the same information as
-  the exemplar documentation. We will consider it worse in all other cases.
-\end{itemize}
+The subjects will be instructed to first check the documentation when they
+encounter a question about correct usage of the library, then to consult the
+source code only if their question was not answered to their satisfaction by
+the documentation. Finally they will record the outcome of each event as one
+of: ``resolved by documentation'', ``resolved by source code'' or
+``unresolved''.
 
-We will specifically consider the frequency with which our tool generates the
-same or better documentation than the exemplar. In that case our tool is at a
-minimum saving the developer the time it takes to write the documentation and
-potentially also improving its quality.
-
-We will also consider the frequency with which our tool fails to document
-properties expressed in the exemplar documentation or generates properties
-classified as worse. In these cases our tool is failing to save the developer
-time, or actively worsening the quality of the documentation.
-
-We will also consider the possibility that our tool generates so many
-properties that it overwhelms the reader, though this more subjective measure
-will be evaluated as a part of the user study.
-
-\subsection{User study}
-
-We will perform a user study where two groups of developers are given a third
-party library (including its source code) and a skeleton program and are asked
-to implement functionality in the program that makes use of the library. One
-group will be provided with the original documentation supplied with the
-library and the other group will be supplied with documentation augmented by
-our tool.
-
-Our preliminary library selection is the Nenya library~\cite{nenya}, which
-provides graphics and animation functionality. Developers will be tasked with
-using the library to create interactive and non-interactive animations in a
-series of simple tasks that require increasingly sophisticated use of the
-library.
-
-We will provide a checklist on which the developers will be asked to
-self-report the following events:
+We will also instruct subjects to complete a short survey after they have
+completed the experimental tasks. The results of this survey are not intended
+to directly validate or refute our hypothesis, but to help us to gauge other
+aspects of the work, better understand ambiguous results, and to direct future
+work. The survey questions will include:
 
 \begin{itemize}
-\item The number of times developers referred to the library API documentation.
-\item The number of times developers referred to the library source code.
-\item The number of times developers experienced unexpected behavior from the
-  library. For example, encountering a null pointer exception because they
-  supplied null as an argument to a library method that they thought would
-  handle nulls.
-\end{itemize}
-
-We will also provide them with instructions on how to access the library
-documentation as well as the library source code to insure that they are not
-otherwise discouraged from referencing either.
-
-We will also record the total time taken to complete the tasks as well as the
-number of tasks completed. We will manually inspect the resulting programs to
-tabulate the number of errors made in using the underlying library. We will
-specifically focus on errors that could have been avoided given the information
-in our enhanced documentation, for example, allowing a null value to be passed
-to a method that does not properly handle null parameters.
-
-Finally, we will conduct an exit survey, asking the developers subjective
-questions about their experiences:
-
-\begin{itemize}
-\item Did you find the documentation to be too detailed, sufficiently detailed
-  or not detailed enough?
-\item Did you find the experience of using this library to be pleasant, normal
+\item Do you normally use an integrated development environment (IDE)?
+\item Do you normally rely more on documentation or source code when
+  understanding new code?
+\item Did you find the experience of using this library to be pleasant, normal,
   or frustrating?
+\item Did you find the library documentation to generally be to too detailed,
+  sufficiently detailed, or not detailed enough?
+\item Was anything documented that you found unnecessary?
+\item Was anything not documented that you wished had been present?
 \end{itemize}
 
-We will compare the data from the control group with those from the
-experimental group in the following ways:
+\subsection{Experiment Dry Run}
 
-\begin{itemize}
-\item Did the experimental group refer to the library source code less
-  frequently?
-\item Were there fewer instances of unexpected library behavior encountered by
-  the experimental group?
-\item Did the experimental group find using the library to be less frustrating?
-\item Was the experimental group more likely than the control group to consider
-  the documentation too detailed?
-\end{itemize}
+To identify problems with our experiment design and gauge the level of
+difficulty of our programming tasks, we conducted a dry run of our experiment,
+where the authors (minus the one who designed the experiment tasks) acted as
+non-control-group subjects. The results were humbling and informative.
 
-Our goals are to reduce the frequency with which the developer has to refer to
-the library source code, to make the use of the library less frustrating, and
-to avoid overwhelming the developer with too much detail.
+Small omissions in the instructions for the tasks resulted in substantial
+wasted time on the part of the subjects. Further, the questions encountered by
+the subjects were invariably answered neither by the documentation nor the
+source code. This was partly due to the lack of results from two of the
+inference algorithms (nullability and mutability) which were not available due
+to technical difficulties at the time of the experiement. At least one of the
+questions encountered by one of the subjects would likely have been addressed
+by nullability information.
+
+We also had not provided a standard Eclipse environment in our dry run, and
+discovered that developers using the command line may be biased against
+checking the source code for information on library usage because of difficulty
+in locating the necessary source file among the experiment files.
+
+In addition to the standardization of development environment, we plan to
+reconsider our experiment tasks and potentially our target library. We will aim
+for tasks that avoid implict domain knowledge (in this case, graphics and UI
+library usage patterns). Though this higher level usage pattern information is
+also commonly lacking in library documentation, we do not hypothesize that
+analysis augmented documentation will address such shortcomings.
