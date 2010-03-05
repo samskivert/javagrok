@@ -54,6 +54,7 @@ import com.sun.tools.javac.main.JavaCompiler;
 import java.util.List;
 import java.util.ArrayList;
 import java.util.Stack;
+import java.util.HashMap;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -86,8 +87,15 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	private Stack<JCMethodDecl> current_method;
 	private Types types;
 	private Stack<HashSet<Object[]>> throwstack;
+	private Stack<HashSet<Object[]>> appstack;
 	private int untraceable_branches;
 	private PrintWriter writer;
+
+	private HashMap<JCMethodDecl,HashSet<Object[]>> throwmap;
+	private HashMap<JCMethodDecl,HashSet<Object[]>> callmap;
+	private HashMap<Symbol,JCMethodDecl> methdefs;
+	private HashMap<JCMethodDecl,String> locmap;
+
 	public ExceptionScanner(final AnalysisContextImpl ctx, String splatfile) throws IOException {
 	    this.ctx = ctx;
 	    current_class = new Stack<JCClassDecl>();
@@ -98,6 +106,11 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	    current_signs = new Stack<Integer>();
 	    types = ctx.getProcEnv().getTypeUtils();
 	    throwstack = new Stack<HashSet<Object[]>>();
+	    appstack = new Stack<HashSet<Object[]>>();
+	    throwmap = new HashMap<JCMethodDecl,HashSet<Object[]>>();
+	    callmap = new HashMap<JCMethodDecl,HashSet<Object[]>>();
+	    methdefs = new HashMap<Symbol,JCMethodDecl>();
+	    locmap = new HashMap<JCMethodDecl,String>();
 	    untraceable_branches = 0;
 	    // XXX TODO: untraceables left to do: loops(4),break or return? goto?
 	    writer = new PrintWriter(new FileWriter(splatfile));
@@ -190,14 +203,17 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 		exns.clear();
 		cond_exns.clear();
 	    }
+	    methdefs.put(tree.sym,tree);
 	    current_method.push(tree);
 	    throwstack.push(new HashSet<Object[]>());
+	    appstack.push(new HashSet<Object[]>());
 	    untraceable_branches = 0;
 	    super.visitMethodDef(tree);
 	    if (tree.sym != null) {
 		String exnlist = "";
 		String condexns = "";
 		String loc = compunit.getPackageName()+"."+this.className+"("+resolveTypeToString(tree.getReturnType())+")"+tree.sym;
+		locmap.put(tree,loc);
 		String splat = "";
 		//String loc = compunit.sourcefile+":"+tree.getStartPosition();
 		// Trust me, if you're crying reading this, imagine how I feel writing it
@@ -217,26 +233,11 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 		    ctx.info("splatting: "+loc+"=>"+splat);
 		    writer.println(loc+"-JAVAGROK-"+splat);
 		}
-		//if (!exns.isEmpty()) {
-		//    for (String s : exns) {
-		//	exnlist += " " + s;
-		//    }
-		//}
-		//if (!cond_exns.isEmpty()) {
-		//    for (String s : cond_exns) {
-		//	condexns += "<br>" + s;
-		//    }
-		//}
-		//if (exnlist.length() > 0 || condexns.length() > 0) {
-		//    //ctx.info("Method "+current_class.peek().name+"."+tree.name+" throws"+exnlist);
-		////    Class ec = ExceptionProperty.class;
-		////    ctx.addAnnotation(tree, ec,
-		////		      "exceptionsThrown", "explicitly throws"+exnlist,
-		////		      "throwsWhen", condexns);
-		//}
+
 	    }
 	    current_method.pop();
-	    throwstack.pop();
+	    throwmap.put(tree,throwstack.pop());
+	    callmap.put(tree,appstack.pop());
 	}
 	public void visitIf(JCIf tree) {
 	    scan(tree.cond);
@@ -291,6 +292,7 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	}
 	public void visitTry(JCTry tree) {
 	    throwstack.push(new HashSet<Object[]>());
+	    appstack.push(new HashSet<Object[]>());
 	    scan(tree.body);
 	    untraceable_branches++;
 	    for (JCCatch c : tree.catchers) {
@@ -300,6 +302,8 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	    scan(tree.finalizer);
 	    HashSet<Object[]> exns = throwstack.pop();
 	    throwstack.peek().addAll(exns);
+	    HashSet<Object[]> calls = appstack.pop();
+	    appstack.peek().addAll(calls);
 	}
 	public void visitCatch(JCCatch tree) {
 	    // XXX TODO: If a subsequent catch for the same try block catches
@@ -308,13 +312,18 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	    // another stack for exceptions thrown from the current set of catches...
 	    TypeMirror caught = typeToMirror(tree.param.type);
 	    HashSet<Object[]> toremove = new HashSet<Object[]>();
+	    HashSet<TypeMirror> deferredfilter = new HashSet<TypeMirror>();
 	    for (Object[] ex : throwstack.peek()) {
 		if (types.isSubtype((TypeMirror)ex[0],caught)) {
 		    toremove.add(ex);
 		    //ctx.info("XXXX filtering exception "+(TypeMirror)ex[0]);
 		}
+		deferredfilter.add(caught);
 	    }
 	    throwstack.peek().removeAll(toremove);
+	    for (Object[] app : appstack.peek()) {
+		((HashSet<TypeMirror>)app[4]).add(caught);
+	    }
 
 	    // test code for above:
 	    //try {
@@ -337,7 +346,6 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	    ex[0] = ty;
 	    ex[1] = (Stack<JCExpression>)current_path.clone();
 	    ex[2] = (Stack<Integer>)current_signs.clone();
-	    // XXX TODO: add untraceable branches - e.g. switch
 	    if (untraceable_branches > 0)
 	        ex[3] = true;
 	    else
@@ -347,6 +355,19 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	public void visitApply(JCMethodInvocation tree) {
 	    super.visitApply(tree);
 	    //ctx.info("**Importing: "+tree.meth.sym+" owned by "+tree.meth.sym.owner+" |"+tree.meth.type);
+	    // I think this is what happens for static / class initializers - we're not in a method
+	    if (!appstack.isEmpty()) {
+		Object[] application = new Object[5];
+		application[0] = tree;
+		application[1] = (Stack<JCExpression>)current_path.clone();
+		application[2] = (Stack<Integer>)current_signs.clone();
+		if (untraceable_branches > 0)
+		    application[3] = true;
+		else
+		    application[3] = false;
+		application[4] = new HashSet<TypeMirror>();
+		appstack.peek().add(application);
+	    }
 	    if (tree.meth.getKind() == Tree.Kind.MEMBER_SELECT) {
 	        JCFieldAccess access = (JCFieldAccess)tree.meth;
 		//ctx.info("Need to import exception analysis for "+access.type+" "+access.selected.type+"."+access.name);
@@ -354,6 +375,10 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 		if (access.type != null && access.type.getThrownTypes() != null && !access.type.getThrownTypes().isEmpty()) {
 		    // XXX TODO
 		    //ctx.info("*** This method ("+access.selected.type+"."+access.sym.getQualifiedName()+")might throw!");
+		}
+		if (methdefs.get(access.sym) != null) {
+		    ctx.info("Found existing definition for "+access.sym);
+		    ctx.info("throwmap has "+throwmap.get(methdefs.get(access.sym)).size()+" throws for it.");
 		}
 	        //if (access.selected.getKind() == Tree.Kind.IDENTIFIER) {
 	        //    JCIdent id = (JCIdent)access.selected;
@@ -373,6 +398,17 @@ public class ExceptionProcessor extends AbstractTypeProcessor
 	}
 	public void finished() {
 	    writer.close();
+	    ctx.info("throwmap has "+throwmap.size()+" entries.");
+	    for (JCMethodDecl m : throwmap.keySet()) {
+		HashSet<Object[]> exns = throwmap.get(m);
+		for (Object[] ex : exns) {
+		    ctx.info("Method "+m.name+" throws "+(TypeMirror)ex[0]);
+		}
+	    }
+	    ctx.info("callmap has "+throwmap.size()+" entries.");
+	    ctx.info("methdefs has "+methdefs.size()+" entries.");
+
+	    // Now for the big time: propagation:
 	}
     }
     @Override // from AbstractProcessor
