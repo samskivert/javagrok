@@ -19,6 +19,7 @@ import com.sun.tools.javac.comp.Todo;
 import com.sun.tools.javac.comp.Env;
 import com.sun.source.tree.*;
 import com.sun.tools.javac.util.Context;
+import com.sun.tools.javac.main.JavaCompiler;
 
 import java.util.List;
 import java.util.ArrayList;
@@ -58,6 +59,8 @@ public class ExceptionAnalyzer extends AbstractAnalyzer
 	public void visitClassDef (JCClassDecl tree) {
 	    ctx.info("Visiting class "+ (tree.name.length()==0 ? "<anon class>" : tree.name));
 	    ctx.info("Symbol: "+tree.sym);
+	    if (tree.name.length()==0) {
+	    }
 	    //if (tree.name.length() > 0) {
 	    //    ctx.addAnnotation(tree, ExceptionProperty.class,
 	    //    		  "property", tree.name + " analyzed by exception analysis!");
@@ -149,7 +152,7 @@ public class ExceptionAnalyzer extends AbstractAnalyzer
 	        //}
 	    } else if (tree.meth.getKind() == Tree.Kind.IDENTIFIER) {
 	        JCIdent id = (JCIdent)tree.meth;
-		//ctx.info("Need to import exception analysis for "+id.sym+" with type "+id.type);
+		ctx.info("Need to import exception analysis for "+id.sym+" with type "+id.type);
 	    } else {
 	        ctx.info("Method invocation on SOMETHING");
 	    }
@@ -165,36 +168,50 @@ public class ExceptionAnalyzer extends AbstractAnalyzer
     // from interface Analyzer
     public void process (final AnalysisContext ctx, Set<? extends Element> elements)
     {
-	try {
-        for (Element elem : elements) {
-            // we'll get an Element for each top-level class in a compilation unit (source file),
-            // but scanning the AST from the top-level compilation unit will visit all classes
-            // defined therein, which would result in adding annotations multiple times for source
-            // files that define multiple top-level classes; so we specifically find the
-            // JCClassDecl in the JCCompilationUnit that corresponds to the class we're processing
-            // and only traverse its AST subtree
-            Symbol.ClassSymbol csym = (Symbol.ClassSymbol)elem;
-            JCCompilationUnit unit = ctx.getCompilationUnit(elem);
-	    Enter e = Enter.instance(ctx.getInnerContext());
-	    //e.visitTopLevel(unit);
-	    Todo todo = Todo.instance(ctx.getInnerContext());
-	    Attr attr = Attr.instance(ctx.getInnerContext());
-	    for (Env<AttrContext> env : todo) {
-	        attr.attribClass(env.tree.pos(), env.enclClass.sym);
-	        //compileStates.put(env, CompileState.ATTR);
-	    }
-            for (JCTree def : unit.defs) {
-                if (def.getTag() == JCTree.CLASSDEF && ((JCClassDecl)def).name == csym.name) {
-		    //def.accept(attr);
-		    //attr.visitClassDef((JCClassDecl)def);
-		    //e.visitClassDef((JCClassDecl)def);
-		    //attr.attribClass(def.pos(), csym);
-                    def.accept(new ExceptionScanner(ctx));
-                }
-            }
-        }
-	} catch (Exception e) {
-	    e.printStackTrace();
-	}
+	//try {
+	//    Enter e = Enter.instance(ctx.getInnerContext());
+	//    Todo todo = Todo.instance(ctx.getInnerContext());
+	//    Attr attr = Attr.instance(ctx.getInnerContext());
+	//    JavaCompiler jc = JavaCompiler.instance(ctx.getInnerContext());
+	//    //ArrayList<JCCompilationUnit> units = new ArrayList<JCCompilationUnit>();
+	//    com.sun.tools.javac.util.List<JCCompilationUnit> units = 
+	//	com.sun.tools.javac.util.List.<JCCompilationUnit>nil();
+	//    for (Element elem : elements) {
+	//	units = units.prepend(ctx.getCompilationUnit(elem));
+	//    }
+	//    jc.enterTrees(units);
+        //for (Element elem : elements) {
+        //    // we'll get an Element for each top-level class in a compilation unit (source file),
+        //    // but scanning the AST from the top-level compilation unit will visit all classes
+        //    // defined therein, which would result in adding annotations multiple times for source
+        //    // files that define multiple top-level classes; so we specifically find the
+        //    // JCClassDecl in the JCCompilationUnit that corresponds to the class we're processing
+        //    // and only traverse its AST subtree
+        //    Symbol.ClassSymbol csym = (Symbol.ClassSymbol)elem;
+        //    JCCompilationUnit unit = ctx.getCompilationUnit(elem);
+	//    //e.visitTopLevel(unit);
+	//    //for (Env<AttrContext> env : todo) {
+	//    //    attr.attribClass(env.tree.pos(), env.enclClass.sym);
+	//    //    //compileStates.put(env, CompileState.ATTR);
+	//    //}
+	//	    //e.complete(com.sun.tools.javac.util.List.of(unit),csym);
+	//    //e.visitTopLevel(unit);
+	//    Env<AttrContext> tlenv = e.getTopLevelEnv(unit);
+        //    for (JCTree def : unit.defs) {
+        //        if (def.getTag() == JCTree.CLASSDEF && ((JCClassDecl)def).name == csym.name) {
+	//	    //def.accept(attr);
+	//	    //attr.visitClassDef((JCClassDecl)def);
+	//	    //e.visitClassDef((JCClassDecl)def);
+	//	    //Env<AttrContext> env = e.classEnv((JCClassDecl)def, tlenv);
+	//	    //attr.attribClass(env.tree.pos(), env.enclClass.sym);
+	//	    //jc.complete(csym);
+	//	    attr.attribClass(def.pos(), csym);
+        //            def.accept(new ExceptionScanner(ctx));
+        //        }
+        //    }
+        //}
+	//} catch (Exception e) {
+	//    e.printStackTrace();
+	//}
     }
 }
