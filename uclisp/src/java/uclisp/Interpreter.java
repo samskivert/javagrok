@@ -124,7 +124,11 @@ public class Interpreter
 
             List args = sexp.cdr;
             fn.verifyArguments(args);
-            return fn.evaluate(this, args);
+            Object rv = fn.evaluate(this, args);
+            if (rv == null) {
+                throw new RunTimeException("Function must return nil, not null.", sexp);
+            }
+            return rv;
 
         } catch (NoSuchElementException nsee) {
             throw new RunTimeException("Evaluation of empty sexp.", sexp);
