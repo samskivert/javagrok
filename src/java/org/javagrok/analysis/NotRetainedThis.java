@@ -15,6 +15,6 @@ import java.lang.annotation.Target;
 @Target({ElementType.TYPE, ElementType.CONSTRUCTOR, ElementType.METHOD, ElementType.PARAMETER, ElementType.FIELD})
 @Retention(RetentionPolicy.CLASS)
 @Documented
-public @interface LentThis
+public @interface NotRetainedThis
 {
 }

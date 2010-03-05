@@ -98,6 +98,14 @@ public class TestMain
     public void setSomeObject2(Object so) {
         list.add(new Object());
     }
+    
+    public Object overloaded(List<Object> list) {
+    	return new Object();
+    }
+    
+    public String overloaded(String str) {
+    	return new String();
+    }
 
     public Object getSomeObject(int x) {
         if (x < 0) throw new IllegalArgumentException();
@@ -106,6 +114,23 @@ public class TestMain
     
     public List<Object> getAll() {
         return list;
+    }
+    
+    private String str;
+    
+    public void foo(String str1, String str2) {
+    	this.str = str; 
+    	// String should never be annotated 
+    	// with retained as it is immutable
+    }
+    
+    public String getString() {
+    	String fortytwo = "42";
+    	str = fortytwo;
+    	// String should never be declared
+    	// NonUniqueReturn as it is immutable
+    	// Better not annotating with @NonUniqueReturn/@UniqueReturn
+    	return fortytwo;
     }
     
     public List<Object> getAll2() {
