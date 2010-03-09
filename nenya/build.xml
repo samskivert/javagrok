@@ -4,11 +4,17 @@
   <property name="javadoc.src" value="com/threerings/*/**"/>
   <import file="${javagrok.dir}/build-eval.xml"/>
 
-  <target name="dist" description="Rebuilds, analyzes and javadocs everything.">
+  <target name="experiment" description="Rebuilds, analyzes and javadocs everything.">
     <antcall target="clean"/>
     <antcall target="nullability"/>
     <antcall target="uno"/>
     <antcall target="grok"/>
+    <antcall target="javadoc"/>
+    <antcall target="jar"/>
+  </target>
+
+  <target name="control" description="Rebuilds and javadocs everything (no analyses).">
+    <antcall target="clean"/>
     <antcall target="javadoc"/>
     <antcall target="jar"/>
   </target>

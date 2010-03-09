@@ -179,21 +179,34 @@
 
   <target name="nenya-exp" depends="dist"
           description="Packages up the experiment files.">
+    <antcall target="-nenya-zip">
+      <param name="type" value="experiment"/>
+    </antcall>
+  </target>
+
+  <target name="nenya-control" depends="dist"
+          description="Packages up the control files.">
+    <antcall target="-nenya-zip">
+      <param name="type" value="control"/>
+    </antcall>
+  </target>
+
+  <target name="-nenya-zip">
     <exec executable="ant" dir="nenya">
-      <arg line="dist"/>
+      <arg line="${type}"/>
     </exec>
-    <zip destfile="dist/experiment.zip">
+    <zip destfile="dist/${type}.zip">
       <fileset dir=".">
-        <include name="experiment/*.html"/>
-        <include name="experiment/.classpath"/>
-        <include name="experiment/.project"/>
-        <include name="experiment/build.xml"/>
-        <include name="experiment/nenya/dist/nenya.jar"/>
-        <include name="experiment/nenya/dist/docs/**"/>
-        <include name="experiment/lib/**"/>
-        <include name="experiment/lisp/**"/>
-        <include name="experiment/src/**/*.java"/>
-        <include name="experiment/rsrc/**"/>
+        <include name="${type}/*.html"/>
+        <include name="${type}/.classpath"/>
+        <include name="${type}/.project"/>
+        <include name="${type}/build.xml"/>
+        <include name="${type}/nenya/dist/nenya.jar"/>
+        <include name="${type}/nenya/dist/docs/**"/>
+        <include name="${type}/lib/**"/>
+        <include name="${type}/lisp/**"/>
+        <include name="${type}/src/**/*.java"/>
+        <include name="${type}/rsrc/**"/>
       </fileset>
     </zip>
   </target>
