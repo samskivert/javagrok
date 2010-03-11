@@ -1,4 +1,12 @@
 \section{Framework architecture}
+
+\begin{figure*}
+\centering
+\psfig{file=figures/technicalApproach/from_source_to_jaif.eps, width=5.0in}
+\caption{Toolchain from source to JAIF}
+\label{fig:from_source_to_jaif}
+\end{figure*}
+
 To infer information about Java code we use three existing inference tools and 
 a exception inference developed by ourselves and combine their output. 
 Too aid in writing our own analyses, we have additionally developed a simple 
@@ -11,25 +19,18 @@ results directly in JAIF format, some provide annotated bytecodes which can be
 easily extracted into JAIF format, and others provide textual results for which
 we will read the results into a our framework.
 
-\begin{figure}
-\centering
-\psfig{file=figures/technicalApproach/from_source_to_jaif.eps, width=3.1in}
-\caption{Toolchain}
-\label{fig:from_source_to_jaif}
-\end{figure}
-
-\begin{figure}
-\centering
-\psfig{file=figures/technicalApproach/from_jaif_to_javadoc.eps, width=3in}
-\caption{Toolchain}
-\label{fig:from_jaif_to_javadoc}
-\end{figure}
-
 Figure~\ref{fig:from_source_to_jaif} 
 illustrates the stages from the source to JAIF in our toolchain, explained 
 below. While figure~\ref{fig:from_jaif_to_javadoc} shows how JavaGrok
 puts the annotations back into the source files and generates the HTML
 documentation.
+
+\begin{figure*}
+\centering
+\psfig{file=figures/technicalApproach/from_jaif_to_javadoc.eps, width=5.0in}
+\caption{From JAIF to Javadoc}
+\label{fig:from_jaif_to_javadoc}
+\end{figure*}
 
 First Uno processes the source code which we want to annotate. 
 Because Uno stores its inferred properties in a single separate file, 
