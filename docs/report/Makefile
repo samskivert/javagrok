@@ -7,11 +7,12 @@ BIBFILE=$(TEXFILE:%=%.bib)
 
 all: pdf
 
-pdf: dvi
-	dvipdf $(DVIFILE) $(PDFFILE)
+pdf: ps
+	#dvipdf -t letter $(DVIFILE) $(PDFFILE)
+	ps2pdf $(PSFILE)
 
 ps: dvi
-	dvips -T letter -o $(PSFILE) $(DVIFILE)
+	dvips -t letter -Ppdf -o $(PSFILE) $(DVIFILE)
 
 dvi: $(TEXFILE:%=%.tex) $(BIBFILE)
 	latex $(TEXFILE)
